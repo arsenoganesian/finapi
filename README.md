@@ -16,7 +16,7 @@ Simple Rails API for user balances and internal transfers.
 - Models: persistence
 - Serializers: JSON rendering
 
-## Quick Start
+## Setup
 
 ### Local
 
@@ -26,37 +26,21 @@ bin/rails db:prepare
 bin/rails server
 ```
 
-### Makefile shortcuts
+### Make Commands
 
-List available commands:
+Use `make help` to see available commands.
 
 ```bash
 make help
 ```
 
-Common usage:
-
-```bash
-make setup      # install gems + prepare db
-make server     # start rails server
-make test       # run rspec suite
-make lint       # run rubocop
-make security   # run brakeman + bundler-audit
-```
-
-### Docker (development)
+### Docker
 
 ```bash
 docker compose up --build
 ```
 
-Base URL:
-
-```text
-http://localhost:3000
-```
-
-Run all tests:
+### Test Suite
 
 ```bash
 bin/rails db:create RAILS_ENV=test
@@ -64,12 +48,22 @@ bin/rails db:migrate RAILS_ENV=test
 bundle exec rspec
 ```
 
-JWT configuration:
+## Configuration
+
+### Base URL
+
+```text
+http://localhost:3000
+```
+
+### JWT
 
 - `JWT_SECRET`: signing secret (defaults to Rails secret key base)
 - `JWT_EXPIRATION_SECONDS`: token TTL in seconds (defaults to `3600`)
 
-## API Overview
+## API
+
+### Endpoints
 
 Public endpoints:
 
@@ -82,12 +76,12 @@ Protected endpoints (Bearer token required):
 - PATCH /balance
 - POST /transfers
 
-Response format:
+### Response Format
 
 - Success: `{ "data": ... }`
 - Error: `{ "error": "..." }`
 
-Common status codes:
+### Status Codes
 
 - 200 OK
 - 201 Created
@@ -95,9 +89,9 @@ Common status codes:
 - 404 Not Found
 - 422 Unprocessable Content
 
-## Endpoints With Curl Examples
+## Examples
 
-### 1) Create user
+### Create User
 
 Request:
 
@@ -107,7 +101,7 @@ curl -X POST http://localhost:3000/users \
   -d '{"user":{"email":"alice@example.com"}}'
 ```
 
-Example response (201):
+Response `201 Created`:
 
 ```json
 {
@@ -119,7 +113,7 @@ Example response (201):
 }
 ```
 
-Example error (422):
+Error `422 Unprocessable Content`:
 
 ```json
 {
@@ -127,7 +121,7 @@ Example error (422):
 }
 ```
 
-### 2) Get auth token
+### Create Auth Token
 
 Request:
 
@@ -137,7 +131,7 @@ curl -X POST http://localhost:3000/auth_tokens \
   -d '{"email":"alice@example.com"}'
 ```
 
-Example response (200):
+Response `200 OK`:
 
 ```json
 {
@@ -147,7 +141,7 @@ Example response (200):
 }
 ```
 
-Example error (404):
+Error `404 Not Found`:
 
 ```json
 {
@@ -155,13 +149,13 @@ Example error (404):
 }
 ```
 
-Store token in shell variable:
+Store the token for later requests:
 
 ```bash
-AUTH_TOKEN="<jwt-token>"
+export AUTH_TOKEN="<jwt-token>"
 ```
 
-### 3) Get balance
+### Get Balance
 
 Request:
 
@@ -170,7 +164,7 @@ curl -X GET http://localhost:3000/balance \
   -H "Authorization: Bearer $AUTH_TOKEN"
 ```
 
-Example response (200):
+Response `200 OK`:
 
 ```json
 {
@@ -181,7 +175,7 @@ Example response (200):
 }
 ```
 
-Example error (401):
+Error `401 Unauthorized`:
 
 ```json
 {
@@ -189,7 +183,7 @@ Example error (401):
 }
 ```
 
-### 4) Update balance (top-up or withdraw)
+### Update Balance
 
 Request:
 
@@ -200,7 +194,7 @@ curl -X PATCH http://localhost:3000/balance \
   -d '{"amount":"10.00"}'
 ```
 
-Example response (200):
+Response `200 OK`:
 
 ```json
 {
@@ -211,7 +205,7 @@ Example response (200):
 }
 ```
 
-Example error (422):
+Error `422 Unprocessable Content`:
 
 ```json
 {
@@ -219,7 +213,7 @@ Example error (422):
 }
 ```
 
-### 5) Transfer to another user
+### Create Transfer
 
 Request:
 
@@ -230,7 +224,7 @@ curl -X POST http://localhost:3000/transfers \
   -d '{"transfer":{"recipient_email":"bob@example.com","amount":"25.00"}}'
 ```
 
-Example response (200):
+Response `200 OK`:
 
 ```json
 {
@@ -241,15 +235,17 @@ Example response (200):
 }
 ```
 
-Note: transfer response returns only the sender (authenticated user) balance after transfer.
+The transfer response returns only the authenticated sender balance after the transfer.
 
-Example errors:
+Error `422 Unprocessable Content`:
 
 ```json
 {
   "error": "Insufficient funds for transfer"
 }
 ```
+
+Error `404 Not Found`:
 
 ```json
 {
