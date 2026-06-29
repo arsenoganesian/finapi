@@ -25,7 +25,18 @@ module Transfers
     end
 
     def validate_amount!(amount)
-      Money::ValidateAmountService.call(amount:)
+      validate_positive_amount!(amount)
+      validate_amount_limit!(amount)
+
+      amount
+    end
+
+    def validate_positive_amount!(amount)
+      raise ServiceError.new("Amount must be greater than 0") if amount <= 0
+    end
+
+    def validate_amount_limit!(amount)
+      raise ServiceError.new("Amount exceeds maximum allowed value") if amount.abs > Money::MAX_AMOUNT
     end
 
     def find_sender
