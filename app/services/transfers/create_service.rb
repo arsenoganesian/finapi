@@ -7,8 +7,7 @@ module Transfers
     end
 
     def call
-      amount = parse_amount
-      validate_amount!(amount)
+      amount = validated_amount
       from_user = find_sender
       to_user = find_recipient
       validate_distinct_users!(from_user:, to_user:)
@@ -19,6 +18,13 @@ module Transfers
     private
 
     attr_reader :from_user_id, :recipient_email, :raw_amount
+
+    def validated_amount
+      amount = parse_amount
+      validate_amount!(amount)
+
+      amount
+    end
 
     def parse_amount
       Money::ParseAmountService.call(raw_amount:)

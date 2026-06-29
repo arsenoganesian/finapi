@@ -5,11 +5,19 @@ module Balances
     end
 
     def call
-      User.find(user_id)
+      find_user
     end
 
     private
 
     attr_reader :user_id
+
+    def find_user
+      User.find(normalized_user_id)
+    end
+
+    def normalized_user_id
+      user_id.to_i
+    end
   end
 end
