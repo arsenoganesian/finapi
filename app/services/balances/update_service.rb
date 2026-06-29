@@ -6,15 +6,47 @@ module Balances
     end
 
     def call
-      user = User.find(user_id)
-      amount = Money::ParseAmountService.call(raw_amount:)
-      amount = Balances::ValidateUpdateAmountService.call(amount:)
+      amount = parse_amount
+      validate_amount!(amount)
+      user = find_user
 
-      Balances::ApplyUpdateService.call(user:, amount:)
+      apply_update!(user, amount)
     end
 
     private
 
     attr_reader :user_id, :raw_amount
+
+    def parse_amount
+      Money::ParseAmountService.call(raw_amount:)
+    end
+
+    def validate_amount!(amount)
+      raise ServiceError.new("Amount must not be zero") if amount.zero?
+      return unless amount.positive? && amount > Money::MAX_AMOUNT
+
+      raise ServiceError.new("Amount exceeds maximum allowed value")
+    end
+
+    def find_user
+      User.find(user_id)
+    end
+
+    def apply_update!(user, amount)
+      user.with_lock do
+        next_balance = user.balance + amount
+        validate_next_balance!(next_balance)
+        user.update!(balance: next_balance)
+      end
+
+      user
+    end
+
+    def validate_next_balance!(next_balance)
+      raise ServiceError.new("Insufficient funds") if next_balance.negative?
+      return unless next_balance > Money::MAX_AMOUNT
+
+      raise ServiceError.new("Balance exceeds maximum allowed value")
+    end
   end
 end
